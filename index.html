@@ -2,45 +2,61 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>Unity WebGL Game</title>
+  <title>Unity WebGL Build</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { text-align: center; font-family: sans-serif; }
-    #unity-container { display: inline-block; margin-top: 20px; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #222;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    #unity-container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      background: black;
+    }
   </style>
 </head>
 <body>
-  <h1>🎮 Unity WebGL Game</h1>
   <div id="unity-container">
-    <canvas id="unity-canvas" width="960" height="600"></canvas>
+    <canvas id="unity-canvas"></canvas>
   </div>
-
-  <!-- Unityのローダーを読み込む -->
-  <script src="Build/Build.loader.js"></script>
   <script>
     const buildUrl = "Build";
+    const loaderUrl = buildUrl + "/Build.loader.js";
     const config = {
       dataUrl: buildUrl + "/Build.data",
       frameworkUrl: buildUrl + "/Build.framework.js",
       codeUrl: buildUrl + "/Build.wasm",
       streamingAssetsUrl: "StreamingAssets",
-      companyName: "DefaultCompany",
-      productName: "MyUnityGame",
+      companyName: "YourCompany",
+      productName: "YourProduct",
       productVersion: "1.0",
-      decompressionFallback: true // Brotli圧縮対応
     };
 
     const canvas = document.querySelector("#unity-canvas");
 
-    createUnityInstance(canvas, config, (progress) => {
-      console.log("Loading...", progress);
-    }).then((unityInstance) => {
-      console.log("Unity loaded successfully!");
-    }).catch((message) => {
-      console.error(message);
-    });
+    // ローダーを読み込み
+    const script = document.createElement("script");
+    script.src = loaderUrl;
+    script.onload = () => {
+      createUnityInstance(canvas, config).then((unityInstance) => {
+        console.log("✅ Unity WebGL 実行中");
+      }).catch((message) => {
+        alert("❌ Unity 読み込みエラー: " + message);
+      });
+    };
+    document.body.appendChild(script);
   </script>
 </body>
 </html>
-
-
