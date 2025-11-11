@@ -2,19 +2,94 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>My Unity Game</title>
+  <title>My Unity Game (16:9) with Leaderboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; }
-    #unity-container { width: 100%; height: 100%; }
-    canvas { width: 100%; height: 100%; background: #222; }
+    body {
+      margin: 0;
+      background: #222;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      overflow-y: auto; /* スクロールあり */
+    }
+
+    /* --- ゲームコンテナ --- */
+    #unity-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      background: #111;
+      padding: 10px 0;
+    }
+
+    /* --- ゲーム画面: 16:9 比率 --- */
+    #unity-canvas {
+      width: 90%;
+      max-width: 1200px;
+      aspect-ratio: 16 / 9; /* ★比率を16:9に戻す */
+      background: #111;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    /* --- リーダーボード --- */
+    #leaderboard-area {
+      width: 90%;
+      max-width: 600px;
+      background: #333;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      text-align: center;
+      margin: 20px 0 40px;
+    }
+
+    #leaderboard-area h2 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    #score-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    #score-table th, #score-table td {
+      border: 1px solid #555;
+      padding: 6px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Unityゲーム部分 -->
   <div id="unity-container">
     <canvas id="unity-canvas"></canvas>
   </div>
+
+  <!-- リーダーボード部分 -->
+  <div id="leaderboard-area">
+    <h2>🏆 リーダーボード</h2>
+    <table id="score-table">
+      <thead>
+        <tr><th>Rank</th><th>Name</th><th>Score</th></tr>
+      </thead>
+      <tbody id="leaderboard-body">
+        <tr><td>-</td><td>Loading...</td><td>-</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <script>
+    // --- Unityの設定 ---
     const buildUrl = "Build";
     const loaderUrl = buildUrl + "/Build.loader.js";
     const config = {
@@ -30,7 +105,7 @@
 
     const canvas = document.querySelector("#unity-canvas");
 
-    // UnityLoader を動的読み込み
+    // Unityのロード処理
     const script = document.createElement("script");
     script.src = loaderUrl;
     script.onload = () => {
@@ -38,11 +113,37 @@
         console.log("Loading: " + (progress * 100).toFixed(1) + "%");
       }).then((unityInstance) => {
         console.log("✅ Unity Game Loaded!");
+        window.unityGameInstance = unityInstance;
+        fetchLeaderboard();
       }).catch((message) => {
         alert("❌ Unity 読み込みエラー: " + message);
       });
     };
     document.body.appendChild(script);
+
+    // --- リーダーボード処理 ---
+    function fetchLeaderboard() {
+      const scores = [
+        { rank: 1, name: "Alice", score: 12500 },
+        { rank: 2, name: "Bob", score: 9800 },
+        { rank: 3, name: "Char", score: 7500 }
+      ];
+
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = '';
+      scores.forEach(s => {
+        const row = tbody.insertRow();
+        row.insertCell().textContent = s.rank;
+        row.insertCell().textContent = s.name;
+        row.insertCell().textContent = s.score.toLocaleString();
+      });
+    }
+
+    // --- Unity → JS コールバック関数 ---
+    window.SubmitScoreToWeb = function(name, score) {
+      console.log("Score received from Unity:", name, score);
+      fetchLeaderboard();
+    }
   </script>
 </body>
 </html>
