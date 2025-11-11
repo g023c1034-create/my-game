@@ -122,28 +122,52 @@
     document.body.appendChild(script);
 
     // --- リーダーボード処理 ---
-    function fetchLeaderboard() {
-      const scores = [
-        { rank: 1, name: "Alice", score: 12500 },
-        { rank: 2, name: "Bob", score: 9800 },
-        { rank: 3, name: "Char", score: 7500 }
-      ];
+     <!-- ↓リーダーボード関連のスクリプト部分だけ置き換え -->
+  <script>
+    // --- リーダーボード処理（サーバー連携） ---
+    async function fetchLeaderboard() {
+      try {
+        const response = await fetch("https://reaction_ranking"); // ← あなたのAPIエンドポイント
+        if (!response.ok) throw new Error("通信エラー");
+        const scores = await response.json(); // [{rank: 1, name: "ぬえぴよ", score: 1234}, ...] 形式を想定
 
-      const tbody = document.getElementById('leaderboard-body');
-      tbody.innerHTML = '';
-      scores.forEach(s => {
-        const row = tbody.insertRow();
-        row.insertCell().textContent = s.rank;
-        row.insertCell().textContent = s.name;
-        row.insertCell().textContent = s.score.toLocaleString();
-      });
+        const tbody = document.getElementById("leaderboard-body");
+        tbody.innerHTML = "";
+
+        scores.forEach((s) => {
+          const row = tbody.insertRow();
+          row.insertCell().textContent = s.rank ?? "-";
+          row.insertCell().textContent = s.name ?? "(名無し)";
+          row.insertCell().textContent = s.score?.toLocaleString() ?? "-";
+        });
+      } catch (err) {
+        console.error("⚠️ リーダーボード取得エラー:", err);
+        const tbody = document.getElementById("leaderboard-body");
+        tbody.innerHTML = `<tr><td colspan="3">読み込みに失敗しました</td></tr>`;
+      }
     }
 
     // --- Unity → JS コールバック関数 ---
-    window.SubmitScoreToWeb = function(name, score) {
+    window.SubmitScoreToWeb = async function (name, score) {
       console.log("Score received from Unity:", name, score);
-      fetchLeaderboard();
-    }
+      try {
+        // スコア送信
+        const response = await fetch("https://reaction_ranking", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name, score: score }),
+        });
+        if (!response.ok) throw new Error("送信エラー");
+        console.log("✅ スコア送信成功:", name, score);
+
+        // 更新されたリーダーボードを再取得
+        fetchLeaderboard();
+      } catch (err) {
+        console.error("⚠️ スコア送信エラー:", err);
+      }
+    };
   </script>
+
 </body>
 </html>
+
